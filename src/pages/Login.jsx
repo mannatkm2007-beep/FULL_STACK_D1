@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import bcrypt from "bcryptjs";
-import { db } from "../firebase";
+import { useAuth, API_URL } from "../context/AuthContext";
 
-// Login page: checks the email + password against the Firestore "users" collection.
+// Login page: sends the email + password to the Express backend.
+// On success the backend returns a signed JWT, which we store via AuthContext.
 function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -18,26 +18,22 @@ function Login() {
     setLoading(true);
 
     try {
-      // 1. Find the user document with this email
-      const q = query(
-        collection(db, "users"),
-        where("email", "==", email.trim().toLowerCase())
-      );
-      const snapshot = await getDocs(q);
+      // 1. Send the details to the backend
+      const res = await fetch(`${API_URL}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+      });
+      const data = await res.json();
 
-      if (snapshot.empty) {
+      if (res.status === 401 || res.status === 400) {
         setError("wrong");
         return;
       }
+      if (!res.ok) throw new Error(data.message);
 
-      // 2. Compare the typed password with the stored bcrypt hash
-      const user = snapshot.docs[0].data();
-      const match = await bcrypt.compare(password, user.password);
-
-      if (!match) {
-        setError("wrong");
-        return;
-      }
+      // 2. Store the JWT (localStorage) and the user in context
+      login(data.token, data.user);
 
       // 3. Correct details -> redirect to the home page
       navigate("/");

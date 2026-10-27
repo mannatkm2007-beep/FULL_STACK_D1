@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import NewPost from "./pages/NewPost";
+import Pricing from "./pages/Pricing";
 import "./App.css";
 
 // Header and Footer sit outside <Routes>, so they appear
@@ -19,6 +20,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/post" element={<NewPost />} />
+        <Route path="/pricing" element={<Pricing />} />
       </Routes>
 
       <Footer />

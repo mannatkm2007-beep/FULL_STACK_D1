@@ -1,16 +1,36 @@
-# React + Vite
+# DEV@Deakin - Task D1 (Subscription)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React (Vite) frontend + Express backend + Firebase Firestore.
 
-Currently, two official plugins are available:
+## What's new in D1
+- **Register / Login through the backend** (`backend/server.js`): data is validated with Zod, passwords are hashed with bcrypt, users are stored in Firestore, and login returns a signed **JWT**.
+- **Session management**: the JWT is stored in `localStorage` and shared across the site with React `useContext` (`src/context/AuthContext.jsx`). Logout clears it.
+- **Pricing page** (`/pricing`): Free vs Premium comparison.
+- **Upgrade Plan**: only logged-in Free users can open the payment modal; on valid details the backend sets `plan: "paid"` in Firestore. Users without a `plan` field are treated as Free.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Backend API
+| Method | Route | Purpose |
+|---|---|---|
+| POST | `/api/register` | Validate, hash password, save user (plan = free) |
+| POST | `/api/login` | Check credentials, return JWT + user |
+| GET | `/api/me` | Restore session from JWT |
+| POST | `/api/upgrade` | Validate payment details, set plan = paid |
+| POST | `/signup` | SendGrid welcome email (Task P5) |
 
-## React Compiler
+## Run it
+```bash
+# 1. Frontend (terminal 1)
+cp .env.example .env              # fill in Firebase keys
+npm install
+npm run dev                       # http://localhost:5173
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+# 2. Backend (terminal 2)
+cd backend
+cp .env.example .env              # SendGrid keys + JWT_SECRET
+npm install
+npm start                         # http://localhost:3000
+```
+The backend reads the Firebase keys from the project-root `.env` (the same `VITE_FIREBASE_*` values), so nothing extra is needed.
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Payment details are validated only and are **never stored**.
+Do not commit `node_modules` or `.env` files (both are in `.gitignore`).

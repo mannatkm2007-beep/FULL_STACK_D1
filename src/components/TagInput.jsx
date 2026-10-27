@@ -48,7 +48,6 @@ function TagInput({ tags, onChange, max = 3, error, placeholder }) {
               aria-label={`Remove tag ${t}`}
               onClick={() => onChange(tags.filter((x) => x !== t))}
             >
-              ×
             </button>
           </span>
         ))}

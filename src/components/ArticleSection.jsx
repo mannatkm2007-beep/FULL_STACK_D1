@@ -7,7 +7,6 @@ function ArticleSection({ articles, title = "Articles" }) {
   return (
     <section id="articles">
       <h2 style={{ textAlign: "center" }}>{title}</h2>
-
       <div className="portfolio-grid">
         {articles.map((article) => (
           <ArticleCard
@@ -21,5 +20,4 @@ function ArticleSection({ articles, title = "Articles" }) {
     </section>
   );
 }
-
 export default ArticleSection;

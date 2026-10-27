@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
-import bcrypt from "bcryptjs";
 import { z } from "zod";
-import { db } from "../firebase";
+import { API_URL } from "../context/AuthContext";
 
 // Zod schema = data validation rules for the sign-up form
 const signUpSchema = z
@@ -39,7 +37,6 @@ function SignUp() {
   async function handleSubmit(event) {
     event.preventDefault();
     setFormError("");
-
     // 1. Validate the input before doing anything else
     const result = signUpSchema.safeParse(form);
     if (!result.success) {
@@ -55,30 +52,26 @@ function SignUp() {
     setLoading(true);
 
     try {
-      const email = form.email.trim().toLowerCase();
+      // 2. Send the details to the backend. It validates the data, checks the
+      //    email isn't taken, hashes the password and saves the user in Firestore.
+      const res = await fetch(`${API_URL}/api/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
+          email: form.email.trim().toLowerCase(),
+          password: form.password,
+        }),
+      });
+      const data = await res.json();
 
-      // 2. Make sure this email isn't already registered
-      const existing = await getDocs(
-        query(collection(db, "users"), where("email", "==", email))
-      );
-      if (!existing.empty) {
-        setFormError("An account with this email already exists. Please log in.");
+      if (!res.ok) {
+        setFormError(data.message || "Something went wrong. Please try again.");
         return;
       }
 
-      // 3. Hash the password with bcrypt (never store plain text)
-      const hashedPassword = await bcrypt.hash(form.password, 10);
-
-      // 4. Save the user in Firestore
-      await addDoc(collection(db, "users"), {
-        firstName: form.firstName.trim(),
-        lastName: form.lastName.trim(),
-        email,
-        password: hashedPassword,
-        createdAt: serverTimestamp(),
-      });
-
-      // 5. Redirect to the login page
+      // 3. Redirect to the login page
       navigate("/login");
     } catch (err) {
       console.error("Sign-up error:", err);
