@@ -17,7 +17,7 @@ function SignUpBar() {
     try {
 
       const response = await fetch(
-        "http://localhost:3000/signup",
+        `${import.meta.env.VITE_API_URL}/signup`,
         {
           method: "POST",
 
